@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 产品研发协作全流程</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#faf9f7;--card-bg:#fff;--text:#16162a;--text-secondary:#64648a;--pm-color:#1d4ed8;--pm-bg:#eff6ff;--ops-color:#b91c1c;--ops-bg:#fef2f2;--algo-color:#047857;--algo-bg:#ecfdf5;--dev-color:#6d28d9;--dev-bg:#f5f3ff;--gate-color:#0284c7;--gate-bg:#f0f9ff;--border:#e8e8ed;--shadow-lg:0 12px 48px rgba(0,0,0,.07);--radius:16px;--radius-sm:10px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Noto Sans SC',sans-serif;background:var(--bg);color:var(--text);line-height:1.7;-webkit-font-smoothing:antialiased}
+
+/* ═══ LANG TOGGLE ═══ */
+.lang-toggle{position:fixed;top:20px;right:24px;z-index:300;display:flex;align-items:center;border-radius:100px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);backdrop-filter:blur(12px);padding:4px;cursor:pointer;transition:all .3s;opacity:0;animation:fadeUp .6s ease forwards 1.4s}
+.lang-toggle:hover{background:rgba(255,255,255,0.14);border-color:rgba(255,255,255,0.2)}
+.lang-btn{padding:6px 16px;border-radius:100px;font-size:13px;font-weight:600;color:rgba(255,255,255,0.5);transition:all .25s;border:none;background:none;cursor:pointer;font-family:inherit}
+.lang-btn.active{background:rgba(255,255,255,0.15);color:#fff}
+.lang-toggle.scrolled{background:rgba(250,249,247,0.9);border-color:var(--border)}
+.lang-toggle.scrolled .lang-btn{color:var(--text-secondary)}
+.lang-toggle.scrolled .lang-btn.active{background:var(--pm-color);color:#fff}
+
+/* ═══ HERO ═══ */
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:60px 24px 80px;position:relative;overflow:hidden;background:#16162a;color:#fff}
+.hero-grain{position:absolute;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");background-size:128px;pointer-events:none}
+.hero-glow{position:absolute;border-radius:50%;filter:blur(100px);opacity:.35;pointer-events:none}
+.hero-glow.g1{width:500px;height:500px;top:-120px;right:-80px;background:var(--pm-color)}
+.hero-glow.g2{width:400px;height:400px;bottom:-100px;left:-60px;background:#7c3aed}
+.hero-glow.g3{width:300px;height:300px;bottom:60px;right:20%;background:var(--algo-color);opacity:.2}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:8px 20px;border-radius:100px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);font-size:13px;font-weight:500;color:rgba(255,255,255,.7);margin-bottom:40px;backdrop-filter:blur(8px);opacity:0;animation:fadeUp .8s ease forwards .2s}
+.hero-badge .dot{width:6px;height:6px;border-radius:50%;background:#34d399;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.hero h1{font-family:'DM Serif Display',serif;font-size:clamp(48px,8vw,96px);font-weight:400;line-height:1.1;margin-bottom:28px;letter-spacing:-1px;opacity:0;animation:fadeUp .8s ease forwards .4s}
+.hero h1 em{font-style:italic;background:linear-gradient(135deg,#60a5fa,#34d399);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-desc{font-size:17px;color:rgba(255,255,255,.55);max-width:500px;margin-bottom:64px;opacity:0;animation:fadeUp .8s ease forwards .6s}
+.roles-row{display:flex;gap:20px;justify-content:center;flex-wrap:wrap;opacity:0;animation:fadeUp .8s ease forwards .8s;position:relative;z-index:2}
+.role-chip{display:flex;align-items:center;gap:10px;padding:12px 24px 12px 16px;border-radius:100px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);backdrop-filter:blur(8px);transition:all .35s cubic-bezier(.4,0,.2,1);cursor:pointer;position:relative;user-select:none}
+.role-chip:hover{transform:translateY(-3px);background:rgba(255,255,255,.14)}
+.role-chip.active{transform:translateY(-3px)}
+.role-chip.pm.active{background:rgba(147,197,253,.18);border-color:rgba(147,197,253,.4)}
+.role-chip.ops.active{background:rgba(252,165,165,.18);border-color:rgba(252,165,165,.4)}
+.role-chip.algo.active{background:rgba(110,231,183,.18);border-color:rgba(110,231,183,.4)}
+.role-chip.dev.active{background:rgba(196,181,253,.18);border-color:rgba(196,181,253,.4)}
+.role-chip .emoji{font-size:24px;transition:transform .3s}.role-chip.active .emoji{transform:scale(1.15)}
+.role-chip .name{font-size:14px;font-weight:600}
+.role-chip.pm .name{color:#93c5fd}.role-chip.ops .name{color:#fca5a5}.role-chip.algo .name{color:#6ee7b7}.role-chip.dev .name{color:#c4b5fd}
+.role-chip .chip-arrow{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;color:rgba(255,255,255,.4);background:rgba(255,255,255,.08);margin-left:2px;transition:all .3s}
+.role-chip.active .chip-arrow{transform:rotate(180deg);color:rgba(255,255,255,.8);background:rgba(255,255,255,.15)}
+.role-detail-wrapper{width:100%;max-width:560px;margin-top:0;overflow:hidden;opacity:0;animation:fadeUp .8s ease forwards 1s;position:relative;z-index:2}
+.role-detail-panel{max-height:0;overflow:hidden;transition:max-height .5s cubic-bezier(.4,0,.2,1),opacity .4s ease,margin .4s ease;opacity:0;margin-top:0}
+.role-detail-panel.open{opacity:1;margin-top:28px}
+.role-detail-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:32px;backdrop-filter:blur(16px);text-align:left}
+.role-detail-card .rd-header{display:flex;align-items:center;gap:14px;margin-bottom:20px}
+.rd-avatar{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;border:2px solid;flex-shrink:0;background:rgba(255,255,255,.05)}
+.rd-avatar.pm{border-color:#93c5fd}.rd-avatar.ops{border-color:#fca5a5}.rd-avatar.algo{border-color:#6ee7b7}.rd-avatar.dev{border-color:#c4b5fd}
+.rd-name{font-size:20px;font-weight:800}
+.rd-name.pm{color:#93c5fd}.rd-name.ops{color:#fca5a5}.rd-name.algo{color:#6ee7b7}.rd-name.dev{color:#c4b5fd}
+.rd-tagline{font-size:13px;color:rgba(255,255,255,.45);margin-top:2px}
+.rd-duties{list-style:none;padding:0;margin:0}
+.rd-duties li{font-size:14px;color:rgba(255,255,255,.75);padding:8px 0 8px 28px;position:relative;border-bottom:1px solid rgba(255,255,255,.06);line-height:1.6}
+.rd-duties li:last-child{border-bottom:none}
+.rd-duties li::before{content:'';position:absolute;left:0;top:16px;width:10px;height:10px;border-radius:3px}
+.rd-duties.pm li::before{background:#93c5fd}.rd-duties.ops li::before{background:#fca5a5}.rd-duties.algo li::before{background:#6ee7b7}.rd-duties.dev li::before{background:#c4b5fd}
+.rd-phases{display:flex;flex-wrap:wrap;gap:6px;margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,.08)}
+.rd-phase-tag{font-size:11px;font-weight:600;padding:4px 12px;border-radius:100px;background:rgba(255,255,255,.06);color:rgba(255,255,255,.5);border:1px solid rgba(255,255,255,.08)}
+.hero-scroll{position:absolute;bottom:32px;left:50%;transform:translateX(-50%);font-size:12px;color:rgba(255,255,255,.3);letter-spacing:3px;display:flex;flex-direction:column;align-items:center;gap:8px;opacity:0;animation:fadeUp .8s ease forwards 1.2s}
+.hero-scroll .arrow{width:20px;height:20px;border-right:2px solid rgba(255,255,255,.25);border-bottom:2px solid rgba(255,255,255,.25);transform:rotate(45deg);animation:scrollBounce 2s infinite}
+@keyframes scrollBounce{0%,100%{transform:rotate(45deg) translateY(0)}50%{transform:rotate(45deg) translateY(6px)}}
+
+/* ═══ NAV ═══ */
+.timeline-nav{position:sticky;top:0;z-index:100;background:rgba(250,249,247,.88);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 24px}
+.timeline-nav-inner{max-width:1060px;margin:0 auto;display:flex;align-items:center;overflow-x:auto;scrollbar-width:none}
+.timeline-nav-inner::-webkit-scrollbar{display:none}
+.nav-item{flex:1;min-width:110px;text-align:center;padding:16px 8px;font-size:12px;font-weight:500;color:var(--text-secondary);cursor:pointer;position:relative;transition:color .3s;white-space:nowrap}
+.nav-item::after{content:'';position:absolute;bottom:0;left:20%;right:20%;height:3px;border-radius:3px 3px 0 0;background:var(--pm-color);transform:scaleX(0);transition:transform .3s ease}
+.nav-item.active{color:var(--pm-color);font-weight:700}.nav-item.active::after{transform:scaleX(1)}
+.nav-dot{width:7px;height:7px;border-radius:50%;background:var(--border);margin:0 auto 5px;transition:all .3s}
+.nav-item.active .nav-dot{background:var(--pm-color);box-shadow:0 0 0 4px rgba(29,78,216,.12)}
+
+/* ═══ CONTENT ═══ */
+.content{max-width:780px;margin:0 auto;padding:40px 24px 120px}
+.phase-section{margin-bottom:48px}
+.phase-header{display:flex;align-items:center;gap:16px;margin-bottom:24px;padding-top:24px}
+.phase-number{width:48px;height:48px;border-radius:50%;background:var(--text);color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;flex-shrink:0}
+.phase-title{font-size:28px;font-weight:900}.phase-subtitle{font-size:14px;color:var(--text-secondary);margin-top:2px}
+.step-card{background:var(--card-bg);border-radius:var(--radius);border:1px solid var(--border);margin-bottom:14px;overflow:hidden;transition:box-shadow .3s ease,border-color .3s ease}
+.step-card:hover{box-shadow:var(--shadow-lg);border-color:transparent}
+.step-card-header{padding:20px 24px;display:flex;align-items:center;gap:14px;cursor:pointer;user-select:none}
+.step-role-dot{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.step-role-dot.pm{background:var(--pm-bg)}.step-role-dot.ops{background:var(--ops-bg)}.step-role-dot.algo{background:var(--algo-bg)}.step-role-dot.dev{background:var(--dev-bg)}.step-role-dot.multi{background:linear-gradient(135deg,var(--pm-bg),var(--ops-bg))}
+.step-role-name{font-size:13px;font-weight:700}
+.step-role-name.pm{color:var(--pm-color)}.step-role-name.ops{color:var(--ops-color)}.step-role-name.algo{color:var(--algo-color)}.step-role-name.dev{color:var(--dev-color)}.step-role-name.multi{color:var(--text)}
+.step-desc{flex:1;font-size:15px;color:var(--text);line-height:1.6}
+.step-toggle{width:28px;height:28px;border-radius:50%;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .3s ease,background .3s ease;font-size:14px;color:var(--text-secondary)}
+.step-card.open .step-toggle{transform:rotate(180deg);background:var(--text);color:#fff}
+.step-detail{max-height:0;overflow:hidden;transition:max-height .4s ease}
+.step-detail-inner{padding:0 24px 24px 78px}
+.detail-section{margin-bottom:16px}.detail-section:last-child{margin-bottom:0}
+.detail-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--text-secondary);margin-bottom:8px}
+.detail-list{list-style:none;padding:0}
+.detail-list li{font-size:14px;padding:5px 0 5px 20px;position:relative;color:var(--text)}
+.detail-list li::before{content:'';position:absolute;left:0;top:13px;width:8px;height:8px;border-radius:2px;background:var(--border)}
+.detail-list li.pm::before{background:var(--pm-color)}.detail-list li.ops::before{background:var(--ops-color)}.detail-list li.algo::before{background:var(--algo-color)}.detail-list li.dev::before{background:var(--dev-color)}
+.deliverable{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;background:var(--bg);border-radius:var(--radius-sm);font-size:14px;font-weight:500;color:var(--text);cursor:pointer;transition:all .2s ease;border:1px solid transparent;margin:4px 8px 4px 0}
+.deliverable:hover{border-color:var(--pm-color);background:var(--pm-bg);color:var(--pm-color)}
+.deliverable .icon{font-size:16px}
+.quality-gate{background:var(--gate-bg);border:2px dashed var(--gate-color);border-radius:var(--radius);padding:20px 24px;margin:32px 0;display:flex;align-items:flex-start;gap:14px}
+.gate-icon{width:36px;height:36px;border-radius:50%;background:var(--gate-color);color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.gate-title{font-size:14px;font-weight:700;color:var(--gate-color);margin-bottom:4px}
+.gate-items{font-size:13px;color:var(--text-secondary);line-height:1.8}
+.connector{display:flex;justify-content:center;padding:8px 0}
+.connector-line{width:2px;height:32px;background:linear-gradient(to bottom,var(--border),transparent)}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(4px);z-index:1000;display:none;align-items:center;justify-content:center;padding:24px;opacity:0;transition:opacity .3s ease}
+.modal-overlay.show{display:flex;opacity:1}
+.modal{background:var(--card-bg);border-radius:var(--radius);max-width:680px;width:100%;max-height:82vh;overflow-y:auto;padding:40px;position:relative;box-shadow:0 25px 60px rgba(0,0,0,.18);transform:translateY(20px);transition:transform .3s ease}
+.modal-overlay.show .modal{transform:translateY(0)}
+.modal-close{position:absolute;top:16px;right:16px;width:32px;height:32px;border-radius:50%;border:none;background:var(--bg);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--text-secondary);transition:background .2s}
+.modal-close:hover{background:var(--border)}
+.modal-tag{font-size:12px;font-weight:700;letter-spacing:2px;color:var(--pm-color);margin-bottom:12px}
+.modal h3{font-size:22px;font-weight:900;margin-bottom:16px}
+.modal-body{font-size:14px;color:var(--text);line-height:1.9}
+.modal-body table{width:100%;border-collapse:collapse;margin:16px 0}
+.modal-body th,.modal-body td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--border);font-size:13px}
+.modal-body th{font-weight:700;background:var(--bg)}
+.modal-body .flow-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:16px 0}
+.modal-body .flow-step{padding:6px 14px;border-radius:20px;border:1px solid var(--border);font-size:13px;font-weight:500}
+.modal-body .flow-arrow{color:var(--text-secondary);font-size:16px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+.fade-in{opacity:0;transform:translateY(20px);transition:opacity .6s ease,transform .6s ease}
+.fade-in.visible{opacity:1;transform:translateY(0)}
+.scroll-progress{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,var(--pm-color),var(--algo-color),var(--dev-color));z-index:200;transition:width .1s}
+@media(max-width:640px){.step-detail-inner{padding-left:24px}.hero h1{font-size:42px}.phase-title{font-size:22px}.roles-row{gap:10px}.modal{padding:24px}.role-chip{padding:8px 14px 8px 10px}.role-chip .chip-arrow{display:none}.role-detail-card{padding:24px}.rd-avatar{width:42px;height:42px;font-size:22px}.rd-name{font-size:17px}.lang-toggle{top:12px;right:12px}}
+</style>
+</head>
+<body>
+<div class="scroll-progress" id="scrollProgress"></div>
+
+<!-- LANG TOGGLE -->
+<div class="lang-toggle" id="langToggle">
+  <button class="lang-btn active" id="btnZh" onclick="switchLang('zh')">中文</button>
+  <button class="lang-btn" id="btnEn" onclick="switchLang('en')">EN</button>
+</div>
+
+<!-- ═══ HERO ═══ -->
+<section class="hero">
+  <div class="hero-grain"></div><div class="hero-glow g1"></div><div class="hero-glow g2"></div><div class="hero-glow g3"></div>
+  <div class="hero-badge"><span class="dot"></span> Interactive Workflow Guide</div>
+  <h1 data-i18n="hero_title">AI 产品<br><em data-i18n="hero_title_em">研发协作全流程</em></h1>
+  <p class="hero-desc" data-i18n="hero_desc">四个角色，六个阶段。点击展开听他们用第一人称讲述自己的工作，点击交付物查看真实案例。</p>
+  <div class="roles-row" id="rolesRow">
+    <div class="role-chip pm" onclick="toggleRole('pm')" data-role="pm"><span class="emoji">📋</span><span class="name" data-i18n="role_pm">AI PM</span><span class="chip-arrow">▼</span></div>
+    <div class="role-chip ops" onclick="toggleRole('ops')" data-role="ops"><span class="emoji">📢</span><span class="name" data-i18n="role_ops">运营</span><span class="chip-arrow">▼</span></div>
+    <div class="role-chip algo" onclick="toggleRole('algo')" data-role="algo"><span class="emoji">🧠</span><span class="name" data-i18n="role_algo">算法</span><span class="chip-arrow">▼</span></div>
+    <div class="role-chip dev" onclick="toggleRole('dev')" data-role="dev"><span class="emoji">⚙️</span><span class="name" data-i18n="role_dev">开发</span><span class="chip-arrow">▼</span></div>
+  </div>
+  <div class="role-detail-wrapper"><div class="role-detail-panel" id="roleDetailPanel"><div class="role-detail-card" id="roleDetailCard"></div></div></div>
+  <div class="hero-scroll"><span>SCROLL</span><div class="arrow"></div></div>
+</section>
+
+<!-- ═══ NAV ═══ -->
+<nav class="timeline-nav"><div class="timeline-nav-inner">
+  <div class="nav-item active" data-phase="phase1"><div class="nav-dot"></div><span data-i18n="nav1">需求定义</span></div>
+  <div class="nav-item" data-phase="phase2"><div class="nav-dot"></div><span data-i18n="nav2">技术方案与 Demo</span></div>
+  <div class="nav-item" data-phase="phase3"><div class="nav-dot"></div><span data-i18n="nav3">评测体系搭建</span></div>
+  <div class="nav-item" data-phase="phase4"><div class="nav-dot"></div><span data-i18n="nav4">产研协作与上线</span></div>
+  <div class="nav-item" data-phase="phase5"><div class="nav-dot"></div><span data-i18n="nav5">迭代优化</span></div>
+  <div class="nav-item" data-phase="phase6"><div class="nav-dot"></div><span data-i18n="nav6">持续运营</span></div>
+</div></nav>
+
+<!-- ═══ CONTENT ═══ -->
+<main class="content" id="mainContent"></main>
+
+<!-- ═══ MODAL ═══ -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeModalDirect()">✕</button>
+    <div class="modal-tag" id="modalTag"></div>
+    <h3 id="modalTitle"></h3>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+// FULL i18n DATA - drives ALL page content
+// ═══════════════════════════════════════
+let currentLang = 'zh';
+
+const i18n = {
+zh: {
+  hero_title: 'AI 产品<br><em>研发协作全流程</em>',
+  hero_title_em: '研发协作全流程',
+  hero_desc: '四个角色，六个阶段。点击展开听他们用第一人称讲述自己的工作，点击交付物查看真实案例。',
+  role_pm: 'AI PM', role_ops: '运营', role_algo: '算法', role_dev: '开发',
+  nav1:'需求定义',nav2:'技术方案与 Demo',nav3:'评测体系搭建',nav4:'产研协作与上线',nav5:'迭代优化',nav6:'持续运营',
+  doc:'文档', phases_label:'参与阶段：',
+  roleData: {
+    pm:{name:'AI PM（产品经理）',tagline:'我是整个 AI 产品的「总指挥」，从需求到上线，每一步都要确保方向对、质量高。',duties:['搭建需求池，把业务场景整理成结构化的需求表','定义 AI 的输入/输出规格和 MVP 范围','收集标杆案例，建立验收的"金标准"','亲自测试 Demo，验证可行性','发起需求评审，拉齐各方理解','设计 AB 测试方案和灰度发布策略','统筹迭代节奏，制定长期产品路线图'],phases:['需求定义','技术方案与 Demo','评测体系搭建','产研协作与上线','迭代优化','持续运营']},
+    ops:{name:'运营',tagline:'我最了解一线用户，负责把真实的痛点翻译成 AI 能理解的语言。',duties:['梳理当前人工工作流程，标出耗时和痛点','审核任务说明书是否贴合实际','提供真实业务场景的"金标准"答案','参与意图测试和结果测试设计','灰度期间盯紧用户反馈和业务指标','上线后持续收集反馈，整理 Bad Case','推动商业化路径和生态扩展'],phases:['需求定义','评测体系搭建','迭代优化','持续运营']},
+    algo:{name:'算法工程师',tagline:'我负责让 AI "聪明起来"——从选模型、采数据、训练调优到持续迭代。',duties:['从 7 个维度评估和选择候选模型','数据采集：多源收集、合规审查、冷启动方案','数据标注：方案设计、工具选择、一致性验证（κ>0.8）','设计 Prompt 和 Agent 逻辑，搭建快速原型','搭建离线评测指标和自动化评测流水线','模型训练：超参数调优、多轮迭代优化','模型集成：服务化部署、性能调优、兜底逻辑','持续监控数据漂移，驱动增量训练和模型更新'],phases:['技术方案与 Demo','评测体系搭建','产研协作与上线','持续运营']},
+    dev:{name:'开发工程师',tagline:'我把算法的能力变成用户能用的产品——前后端、架构、监控，都是我的活。',duties:['后端 API 设计与开发（RESTful / gRPC）','服务架构搭建（微服务 / 单体）','前端 UI/UX 实现和交互流程开发','安全机制：认证、授权、加密','功能测试：单元、集成、端到端、边界测试','灰度发布基础设施：流量分配、Feature Flag、回滚机制','全量发布和全链路监控（功能/AI/用户/资源四维度）'],phases:['产研协作与上线','迭代优化','持续运营']}
+  },
+  // Phase content arrays: each phase has title, subtitle, gate, and steps
+  phases: [
+    {title:'需求定义',subtitle:'搞清楚我要解决什么问题，什么算做得好',gate:'标杆案例 ≥ 10 个 · 验收标准量化可测 · 场景在 AI 能力范围内',gateTitle:'质量门 · 进入下一阶段前我要确认',steps:[
+      {role:'ops',emoji:'📢',roleName:'运营',desc:'我先梳理现在人工是怎么干活的，哪些环节最耗时、最痛苦，把现状流程画出来。',label:'我具体做什么',items:['走访一线同事，记录他们每天重复做的事','把每个环节的耗时、痛点、出错率都标出来','画一张「现状流程图」，让大家一看就知道问题在哪'],delivLabel:'交付物',deliverables:[{key:'currentFlow',text:'现状流程图'}]},
+      {role:'pm',emoji:'📋',roleName:'AI PM',desc:'我搭建需求池，把所有业务场景按需求方、所处环节、场景描述整理成表，确保没有遗漏。',label:'需求池管理',items:['用在线文档或项目管理工具管理需求池','每条需求记录：需求名称、需求方、所处环节、详细场景描述','按优先级排序，区分核心场景和扩展场景'],delivLabel:'交付物',deliverables:[{key:'reqPool',text:'需求池'}]},
+      {role:'pm',emoji:'📋',roleName:'AI PM',desc:'我写一份「任务说明书」：AI 要接收什么信息、输出什么结果、有哪些硬性限制，同时定义 MVP 范围。',label:'我具体做什么',items:['定义 AI 的「输入」：用户会给 AI 提供什么数据？格式是什么？','定义 AI 的「输出」：AI 应该返回什么结果？用什么格式？','列出硬性约束：字数上限、违禁词、合规要求等','确定核心功能（高频 + 单一场景），明确非核心功能的替代方案','定义"最小够用"标准：用户能用、愿意用、比人工快'],delivLabel:'交付物',deliverables:[{key:'ioSpec',text:'输入/输出规格书'},{key:'mvpScope',text:'MVP 范围定义'}]},
+      {role:'ops',emoji:'📢',roleName:'运营',desc:'我检查「任务说明书」是否贴合实际需要，有遗漏就现在提出来。',label:'我具体做什么',items:['对照日常工作，检查输入/输出定义是否完整','标出遗漏的边界情况（比如特殊客户、异常数据）','确认成功标准是否能被业务团队接受']},
+      {role:'multi',emoji:'📋',roleName:'AI PM + 运营',desc:'我和运营一起收集至少 10 个标杆案例——这些就是 AI 将来要对齐的「标准答案」。',label:'我具体做什么',items:['从历史数据中挑选高质量样本，覆盖简单/复杂/边界场景','运营提供真实业务场景的「金标准」答案','确保标杆案例数量 ≥ 10 个，且验收标准可量化可测'],delivLabel:'交付物',deliverables:[{key:'benchmark',text:'标杆案例集'}]}
+    ]},
+    {title:'技术方案与 Demo',subtitle:'搭出能跑的 Demo，我亲自验证可行性',gate:'Demo 跑通核心场景 · PM 亲测确认可行 · 技术路线已确定 · 知识库和标注方案就绪',gateTitle:'质量门 · 进入下一阶段前我要确认',steps:[
+      {role:'algo',emoji:'🧠',roleName:'算法',desc:'我从 7 个维度评估候选模型（效果、成本、速度、上下文窗口、安全隐私、生态工具、定制化能力），选出最适合的技术路线。',label:'我的模型选择 7 维度',items:['效果 — 准确性、推理能力、创造性、指令遵循','成本 — API 调用、计算托管、开发成本','速度 — 首字延迟 (TTFT)、总生成时间','上下文窗口 — 4K / 8K / 128K，长文本处理能力','安全与隐私 — 数据策略、部署方式、可控性','生态与工具 — Function Calling、多模态、社区','定制化能力 — 微调支持、提示工程敏感度'],delivLabel:'交付物',deliverables:[{key:'modelCompare',text:'模型选型对比表'}]},
+      {role:'algo',emoji:'🧠',roleName:'算法',desc:'我负责数据采集——从多种来源收集知识库数据，进行合规审查，必要时用合成数据或众包方式冷启动。',label:'数据采集工作',items:['多源数据收集（内部文档 / 公开数据 / 授权数据）','数据合规审查（隐私保护 / 版权确认）','冷启动方案（合成数据 / 众包标注）'],delivLabel:'交付物',deliverables:[{key:'knowledgeBase',text:'知识库体系规划'}]},
+      {role:'multi',emoji:'🏷️',roleName:'算法 + 标注团队',desc:'我设计数据标注方案，选择或开发标注工具，组建标注团队并培训，确保标注一致性 κ > 0.8。',label:'数据标注工作',items:['标注方案设计：定义标注规范和标准','标注工具选择 / 开发','标注团队组建 / 培训','标注一致性验证（Kappa 系数 κ > 0.8）']},
+      {role:'algo',emoji:'🧠',roleName:'算法',desc:'我设计 Prompt 和 Agent 逻辑，快速搭建最小可用 Demo，实现最小功能 + 演示界面。',label:'快速原型构建',items:['数据准备：用小样本或合成数据先跑通链路','模型选型：先选轻量级 / 开源模型快速试错','Prompt 设计 & Agent 逻辑设计','最小功能实现 + 演示界面开发']},
+      {role:'pm',emoji:'📋',roleName:'AI PM',desc:'我拿标杆案例亲自测试 Demo，看 AI 输出是否贴合预期，把不满意的地方一条条记下来。',label:'我的 POC 测试要点',items:['功能测试：AI 是否能完成基本任务？','性能测试：响应速度和稳定性怎么样？','人工评估：邀请专家和真实用户打分','数据合规审查：输出内容是否安全合规？']}
+    ]},
+    {title:'评测体系搭建',subtitle:'我怎么知道模型好不好？建立可量化的评测标准',gate:'评测用例覆盖简单/复杂/边界场景 · 自动化评测流水线就绪 · 人工评估方案确定',gateTitle:'质量门 · 进入下一阶段前我要确认',steps:[
+      {role:'algo',emoji:'🧠',roleName:'算法',desc:'我设计离线评测指标（准确率、精确率、召回率、F1/AUC），搭建自动化评测流水线。',label:'评测维度',items:['离线指标 — 准确率、精确率、召回率、F1、AUC','鲁棒性测试 — 边缘情况、对抗样本','可解释性分析 — 模型为什么给出这个答案？','成本分析 — 推理成本和存储成本是否可接受？'],delivLabel:'交付物',deliverables:[{key:'evalMatrix',text:'评测用例集'}]},
+      {role:'multi',emoji:'📋',roleName:'AI PM + 运营',desc:'我和运营一起设计「意图测试」和「结果测试」，确保 AI 理解用户真正想要什么。',label:'测试类型',items:['召回测试 — AI 能否理解用户的各种表达方式？','意图测试 — AI 是否准确判断了用户意图？','数据查询测试 — AI 调用知识库的结果是否正确？','结果测试 — 最终输出是否符合业务要求？']}
+    ]},
+    {title:'产研协作与上线',subtitle:'前后端联调、模型集成、功能测试，准备上线',gate:'前后端联调通过 · P0 Bug 全部修复 · 多维效果验收达标 · 运营方案就绪',gateTitle:'质量门 · 进入下一阶段前我要确认',steps:[
+      {role:'pm',emoji:'📋',roleName:'AI PM',desc:'我发起需求评审，拉齐所有人对产品范围的理解，设计交互界面和异常处理流程。',label:'我具体做什么',items:['组织需求评审会，确保产品/算法/开发/运营对齐','输出产品需求规格说明书（PRD）','设计交互 & 界面方案']},
+      {role:'algo',emoji:'🧠',roleName:'算法',desc:'我完成模型训练和调优，然后进行模型集成——服务化部署、前后端对接、性能调优和错误兜底逻辑。',label:'模型训练',items:['超参数调优（网格搜索 / 随机搜索 / 贝叶斯）','训练策略（迁移学习 / 微调 / 从头训练）','多轮迭代优化 + 训练日志记录'],label2:'模型集成',items2:['模型服务化部署','前后端对接（定义 API 接口和数据格式）','性能调优（响应时间 / 并发处理）','错误处理 / 兜底逻辑（当 AI 不确定时如何降级）'],delivLabel:'交付物',deliverables:[{key:'modelIntegration',text:'评测数据集 & Prompt 版本'}]},
+      {role:'dev',emoji:'⚙️',roleName:'开发',desc:'我负责后端 API（RESTful/gRPC）、服务架构、前端 UI/UX 实现，以及安全和监控系统。',label:'后端',items:['API 设计 / 开发（RESTful / gRPC）','服务架构搭建（微服务 / 单体）','安全机制（认证 / 授权 / 加密）','监控 / 日志系统'],label2:'前端',items2:['UI/UX 设计实现','交互流程开发','异常处理（网络错误、超时、降级方案）','性能优化（加载 / 响应速度）']},
+      {role:'dev',emoji:'🧪',roleName:'开发 + AI PM',desc:'我们进行全方位功能测试——单元测试、集成测试、端到端测试、边界/异常值测试，用 Bug 列表跟踪所有问题。',label:'测试类型',items:['单元测试：每个模块是否正常工作？','集成测试：模块之间的配合是否正确？','端到端测试：完整用户流程是否跑通？','边界 / 异常值测试：极端输入会不会崩溃？'],delivLabel:'交付物',deliverables:[{key:'bugList',text:'Bug 列表（P0/P1/P2）'}]},
+      {role:'multi',emoji:'📋',roleName:'AI PM + 运营',desc:'我们做多维效果验收——主观指标（人工打分）和客观指标（自动化评测）双管齐下。',label:'验收标准',items:['主观指标：专家和用户的人工评分 ≥ 预设阈值','客观指标：自动化评测结果达标','P0 Bug 全部修复，P1 Bug 有明确修复计划']}
+    ]},
+    {title:'迭代优化',subtitle:'AB 测试与灰度发布，我要小步快跑验证效果',gate:'AB 测试结果显著优于对照组 · 灰度期间无重大异常 · 各方确认可全量发布',gateTitle:'质量门 · 进入下一阶段前我要确认',steps:[
+      {role:'pm',emoji:'📋',roleName:'AI PM',desc:'我设计 AB 测试方案——定义测试目标、核心指标（准确率/转化率）、辅助指标（用户满意度），设置对照组与实验组。',label:'AB 测试设计要点',items:['测试目标定义：这次实验要验证什么假设？','核心指标（如准确率 / 转化率）：必须显著优于对照组','辅助指标（如用户满意度）：不能显著下降','对照组与实验组设置：确保样本可比性']},
+      {role:'dev',emoji:'⚙️',roleName:'开发',desc:'我搭建灰度发布基础设施——分阶段流量（2%→5%→20%→100%）、监控阈值设置、回退机制和异常处理预案。',label:'灰度发布规划',items:['分阶段流量：2% → 5% → 20% → 100%','监控阈值设置：每个阶段定义通过/回退的指标阈值','回退机制：异常时 30 秒内可切回旧版本','异常处理预案：各类故障场景的应急响应方案']},
+      {role:'ops',emoji:'📢',roleName:'运营',desc:'我盯着灰度期间的用户反馈和业务指标，一旦发现异常立刻拉响警报。',label:'我具体做什么',items:['每天看用户反馈，记录正面和负面评价','监控转化率、满意度等核心业务指标','汇总灰度期间的问题清单，推动及时修复']}
+    ]},
+    {title:'持续运营',subtitle:'全量上线后，我怎么保证它一直好用？',gate:null,gateTitle:null,steps:[
+      {role:'dev',emoji:'⚙️',roleName:'开发',desc:'我负责全量发布和全链路监控——功能监控（错误率/响应时间）、AI 监控（准确率/漂移/异常）、用户行为监控、资源监控（CPU/内存/带宽）。',label:'全量发布清单',items:['流量切转：灰度 → 全量','系统监控开启：CPU、内存、延迟、错误率','实时日志收集：记录每一次 AI 调用的输入输出','服务 SLA 确认：可用性、响应时间达标'],label2:'全链路监控四维度',items2:['功能监控 — 错误率、响应时间','AI 监控 — 准确率、数据漂移、异常检测','用户行为监控 — 使用频率、满意度、留存','资源监控 — CPU / 内存 / 带宽利用率']},
+      {role:'algo',emoji:'🧠',roleName:'算法',desc:'我负责数据回流和模型迭代——构建 ETL/ELT 管道，收集用户交互数据，标注高质量反馈，建立数据质量监控。',label:'数据回流',items:['构建 ETL/ELT 管道：自动化采集线上数据','收集用户交互数据：点击、反馈、对话记录','标注高质量反馈：人工筛选优质和 Bad Case','建立数据质量监控：确保数据管道稳定'],label2:'模型迭代',items2:['数据漂移检测：线上数据分布是否偏离训练数据？','增量训练：用新数据持续优化模型','模型更新：部署新版本模型','AB 测试验证：新旧模型对比，确认效果提升']},
+      {role:'ops',emoji:'📢',roleName:'运营',desc:'我负责产品上线后的端到端流程运营优化，收集用户反馈，推动商业价值落地。',label:'运营重点',items:['持续收集用户反馈，整理 Bad Case','与 PM 和算法协作，推动迭代优化','探索商业化路径和生态扩展机会']},
+      {role:'pm',emoji:'📋',roleName:'AI PM',desc:'我统筹功能优化节奏——分析用户反馈、规划功能迭代、优化 UI/UX、推动性能调优，所有需求按 P0/P1/P2 优先级排列。',label:'功能优化工作',items:['用户反馈分析：从数据和反馈中发现改进点','功能迭代：按优先级规划下一版本','UI/UX 优化：持续提升用户体验','性能调优：确保系统稳定高效'],delivLabel:'交付物',deliverables:[{key:'featureBacklog',text:'需求优先级表'}]}
+    ],footer:'整个流程不断循环迭代，每一轮都让产品变得更好。'}
+  ],
+  modals:{
+    currentFlow:{tag:'文档',title:'现状流程图',body:'<p style="color:var(--text-secondary);margin-bottom:16px">运营梳理的当前人工工作流程</p><div style="background:var(--bg);border-radius:12px;padding:24px"><p style="font-weight:700;margin-bottom:12px">商品种草文案 — 现状流程</p><div class="flow-row"><span class="flow-step">收到需求</span><span class="flow-arrow">→</span><span class="flow-step">查商品资料</span><span class="flow-arrow">→</span><span class="flow-step">确定卖点</span><span class="flow-arrow">→</span><span class="flow-step">撰写文案</span><span class="flow-arrow">→</span><span class="flow-step">自检合规</span><span class="flow-arrow">→</span><span class="flow-step">提交审核</span></div><table><tr><th>环节</th><th>耗时</th><th>痛点</th></tr><tr><td>查商品资料</td><td>15 min</td><td>资料分散在多个文档</td></tr><tr><td>确定卖点</td><td>10 min</td><td>缺乏统一方法论</td></tr><tr><td style="color:var(--ops-color);font-weight:700">撰写文案</td><td style="color:var(--ops-color);font-weight:700">25 min</td><td style="color:var(--ops-color);font-weight:700">最耗时，创意消耗大</td></tr><tr><td>自检合规</td><td>5 min</td><td>容易遗漏违禁词</td></tr></table><p style="font-weight:700;margin-top:12px">单条耗时：约 55 分钟 / case</p></div>'},
+    reqPool:{tag:'文档',title:'需求池',body:'<p style="color:var(--text-secondary);margin-bottom:16px">按场景整理的需求清单</p><div style="background:var(--bg);border-radius:12px;padding:24px;overflow-x:auto"><table><tr><th>#</th><th>需求名称</th><th>需求方</th><th>所处环节</th></tr><tr><td>1</td><td>生产制造数据追溯</td><td>公司内部</td><td>生产制造</td></tr><tr><td>2</td><td>设备装配问题追溯</td><td>公司内部</td><td>生产制造</td></tr><tr><td>3</td><td>微信聊天数据追溯</td><td>公司内部</td><td>生产制造</td></tr><tr><td>4</td><td>追溯问题源头</td><td>公司内部</td><td>质量控制</td></tr></table></div>'},
+    ioSpec:{tag:'文档',title:'输入/输出规格书',body:'<div style="background:var(--bg);border-radius:12px;padding:24px"><table><tr><th>项目</th><th>说明</th></tr><tr><td style="font-weight:700">输入</td><td>商品名称、属性、目标人群、平台</td></tr><tr><td style="font-weight:700">输出</td><td>种草文案，200-500 字，3+ 卖点</td></tr><tr><td style="font-weight:700">硬性约束</td><td>不使用违禁词、不做虚假承诺</td></tr><tr><td style="font-weight:700">质量标准</td><td>人工评分 ≥ 4.0/5.0</td></tr></table></div>'},
+    mvpScope:{tag:'文档',title:'MVP 范围定义',body:'<div style="background:var(--bg);border-radius:12px;padding:24px"><ul style="list-style:none;padding:0"><li style="padding:6px 0">✅ <strong>确定核心功能</strong>（高频 + 单一场景）</li><li style="padding:6px 0">✅ <strong>明确非核心功能的替代方案</strong></li><li style="padding:6px 0">✅ <strong>定义"最小够用"标准</strong></li></ul></div>'},
+    benchmark:{tag:'文档',title:'标杆案例集',body:'<div style="background:var(--bg);border-radius:12px;padding:24px"><table><tr><th>案例</th><th>类型</th><th>输入摘要</th></tr><tr><td>#001</td><td>简单</td><td>单品种草，美妆类</td></tr><tr><td>#003</td><td>复杂</td><td>多品对比，3C 类</td></tr><tr><td>#004</td><td>边界</td><td>医疗健康类（合规敏感）</td></tr><tr><td colspan="3" style="text-align:center;color:var(--text-secondary)">共计 ≥ 10 个案例</td></tr></table></div>'},
+    modelCompare:{tag:'文档',title:'模型选型对比表',body:'<div style="background:var(--bg);border-radius:12px;padding:24px;overflow-x:auto"><table><tr><th>维度</th><th>核心问题</th><th>评估要点</th></tr><tr><td>效果</td><td>任务完成度？</td><td>准确性、推理、创造性</td></tr><tr><td>成本</td><td>总拥有成本？</td><td>API、托管、开发</td></tr><tr><td>速度</td><td>响应快不快？</td><td>TTFT、总生成时间</td></tr><tr><td>上下文</td><td>能处理多少？</td><td>4K/8K/128K</td></tr><tr><td>安全隐私</td><td>数据安全？</td><td>策略、部署、可控性</td></tr><tr><td>生态工具</td><td>容易集成？</td><td>FC、多模态、社区</td></tr><tr><td>定制化</td><td>能适配业务？</td><td>微调、提示工程</td></tr></table></div>'},
+    knowledgeBase:{tag:'文档',title:'知识库体系规划',body:'<div style="background:var(--bg);border-radius:12px;padding:24px;overflow-x:auto"><table><tr><th>类型</th><th>知识库</th><th>知识类型</th></tr><tr><td>基础</td><td>行业通用</td><td>标准知识、行业黑话</td></tr><tr><td>专业</td><td>工厂专有</td><td>工艺SOP、设备、质量、问题解决</td></tr><tr><td>案例</td><td>历史案例</td><td>问题报告、诊断案例</td></tr><tr><td>关联</td><td>Schema</td><td>数据库说明、优质SQL</td></tr></table></div>'},
+    evalMatrix:{tag:'文档',title:'评测用例集',body:'<div style="background:var(--bg);border-radius:12px;padding:24px;overflow-x:auto"><table><tr><th>#</th><th>问题</th><th>类型</th></tr><tr><td>1</td><td>胎面划痕是什么问题？</td><td>简单</td></tr><tr><td>9</td><td>压出机温度偏高，胎面有热胶粒，有关系吗？</td><td>复合型</td></tr><tr><td>12</td><td>检查员说外观问题增多，查原因</td><td>模糊意图</td></tr></table></div>'},
+    modelIntegration:{tag:'文档',title:'评测数据集 & Prompt 版本',body:'<div style="background:var(--bg);border-radius:12px;padding:24px"><p style="font-weight:700;margin-bottom:8px">系统 Prompt (V20)</p><p style="font-size:13px;color:var(--text-secondary);font-style:italic">"你是一位轮胎制造业的根因定位专家..."</p></div>'},
+    bugList:{tag:'文档',title:'Bug 列表',body:'<div style="background:var(--bg);border-radius:12px;padding:24px"><p style="font-weight:700;color:var(--ops-color);margin-bottom:8px">P0 · 11 条</p><table><tr><th>#</th><th>Bug</th></tr><tr><td>1</td><td>报告格式优化</td></tr><tr><td>2</td><td>回复出现额外信息</td></tr><tr><td>3</td><td>问答错误</td></tr><tr><td>6</td><td>多Agent流程断层</td></tr><tr><td>7</td><td>意图识别问题</td></tr></table></div>'},
+    featureBacklog:{tag:'文档',title:'需求优先级表',body:'<div style="background:var(--bg);border-radius:12px;padding:24px"><p style="font-weight:700;color:var(--ops-color);margin-bottom:8px">P0 · 5 条</p><table><tr><th>#</th><th>需求</th><th>状态</th></tr><tr><td>1</td><td>PC端分享功能</td><td style="color:var(--algo-color)">验收完成</td></tr><tr><td>2</td><td>模板页面优化</td><td style="color:var(--algo-color)">验收完成</td></tr><tr><td>3</td><td>Windows兼容修复</td><td style="color:#d97706">验收中</td></tr></table></div>'}
+  }
+},
+
+en: {
+  hero_title: 'AI Product<br><em>Development Workflow</em>',
+  hero_title_em: 'Development Workflow',
+  hero_desc: 'Four roles, six phases. Click to hear each role describe their work in first person. Click deliverables to see real examples.',
+  role_pm: 'AI PM', role_ops: 'Operations', role_algo: 'Algorithm', role_dev: 'Engineering',
+  nav1:'Requirements',nav2:'Tech Solution & Demo',nav3:'Evaluation System',nav4:'Dev & Launch',nav5:'Iteration',nav6:'Ongoing Ops',
+  doc:'Document', phases_label:'Involved phases: ',
+  roleData: {
+    pm:{name:'AI PM (Product Manager)',tagline:'I\'m the "conductor" of the entire AI product — ensuring every step from requirements to launch stays on track.',duties:['Build requirement pool, organize business scenarios into structured tables','Define AI input/output specs and MVP scope','Collect benchmark cases as "gold standard" for acceptance','Personally test demos to verify feasibility','Lead requirement reviews to align all stakeholders','Design A/B testing and canary release strategies','Orchestrate iteration cadence, define long-term product roadmap'],phases:['Requirements','Tech Solution & Demo','Evaluation System','Dev & Launch','Iteration','Ongoing Ops']},
+    ops:{name:'Operations',tagline:'I know the frontline users best — translating real pain points into language AI can understand.',duties:['Map current manual workflows, highlight time costs and pain points','Review task specs for alignment with real needs','Provide "gold standard" answers from real business scenarios','Co-design intent tests and result tests','Monitor user feedback and business metrics during canary releases','Continuously collect feedback and organize bad cases post-launch','Drive commercialization and ecosystem expansion'],phases:['Requirements','Evaluation System','Iteration','Ongoing Ops']},
+    algo:{name:'Algorithm Engineer',tagline:'I make the AI "smart" — from model selection, data collection, training & tuning to continuous iteration.',duties:['Evaluate candidate models across 7 dimensions','Data collection: multi-source gathering, compliance review, cold-start strategies','Data labeling: scheme design, tool selection, consistency validation (κ>0.8)','Design Prompts and Agent logic, build rapid prototypes','Build offline evaluation metrics and automated evaluation pipelines','Model training: hyperparameter tuning, multi-round iterative optimization','Model integration: service deployment, performance tuning, fallback logic','Continuously monitor data drift, drive incremental training and model updates'],phases:['Tech Solution & Demo','Evaluation System','Dev & Launch','Ongoing Ops']},
+    dev:{name:'Development Engineer',tagline:'I turn algorithm capabilities into products users can actually use — frontend, backend, architecture, monitoring.',duties:['Backend API design & development (RESTful / gRPC)','Service architecture setup (microservices / monolith)','Frontend UI/UX implementation and interaction development','Security mechanisms: authentication, authorization, encryption','Testing: unit, integration, end-to-end, boundary/edge cases','Canary release infrastructure: traffic splitting, feature flags, rollback','Full release and end-to-end monitoring (functionality/AI/user/resource)'],phases:['Dev & Launch','Iteration','Ongoing Ops']}
+  },
+  phases: [
+    {title:'Requirements Definition',subtitle:'Clarify what problem I\'m solving and what "good" looks like',gate:'Benchmark cases ≥ 10 · Acceptance criteria measurable · Scenarios within AI capability',gateTitle:'Quality Gate · Must confirm before next phase',steps:[
+      {role:'ops',emoji:'📢',roleName:'Operations',desc:'First, I map out how manual work is currently done — which steps take the longest and are most painful, then draw a current-state process flow.',label:'What I do',items:['Interview frontline colleagues, record their daily repetitive tasks','Label time cost, pain points, and error rates for each step','Draw a "current-state flow chart" so everyone can see where the problems are'],delivLabel:'Deliverable',deliverables:[{key:'currentFlow',text:'Current Process Flow'}]},
+      {role:'pm',emoji:'📋',roleName:'AI PM',desc:'I build a requirement pool, organizing all business scenarios by requester, process stage, and scenario description — making sure nothing is missed.',label:'Requirement Pool Management',items:['Use online docs or project management tools to manage the pool','Record for each requirement: name, requester, stage, detailed scenario','Prioritize and distinguish core vs. extension scenarios'],delivLabel:'Deliverable',deliverables:[{key:'reqPool',text:'Requirement Pool'}]},
+      {role:'pm',emoji:'📋',roleName:'AI PM',desc:'I write a "task spec": what information AI receives, what results it outputs, what hard constraints exist, and define the MVP scope.',label:'What I do',items:['Define AI "input": what data will users provide? In what format?','Define AI "output": what results should AI return? In what format?','List hard constraints: word limits, prohibited words, compliance requirements','Identify core features (high-frequency + single scenario), define alternatives for non-core features','Define "minimum viable" standard: usable, desirable, faster than manual'],delivLabel:'Deliverable',deliverables:[{key:'ioSpec',text:'I/O Specification'},{key:'mvpScope',text:'MVP Scope Definition'}]},
+      {role:'ops',emoji:'📢',roleName:'Operations',desc:'I check if the "task spec" matches real-world needs — raising any gaps or omissions now.',label:'What I do',items:['Cross-check against daily work to verify input/output completeness','Flag missing edge cases (special customers, abnormal data)','Confirm success criteria are acceptable to the business team']},
+      {role:'multi',emoji:'📋',roleName:'AI PM + Operations',desc:'Together with Operations, I collect at least 10 benchmark cases — these are the "gold standard" answers AI will need to match.',label:'What I do',items:['Select high-quality samples from historical data covering simple/complex/edge scenarios','Operations provides "gold standard" answers from real business scenarios','Ensure benchmark cases ≥ 10 with quantifiable, testable acceptance criteria'],delivLabel:'Deliverable',deliverables:[{key:'benchmark',text:'Benchmark Case Set'}]}
+    ]},
+    {title:'Tech Solution & Demo',subtitle:'Build a working demo, personally verify feasibility',gate:'Demo runs core scenarios · PM confirms feasibility · Tech route decided · Knowledge base & labeling plan ready',gateTitle:'Quality Gate · Must confirm before next phase',steps:[
+      {role:'algo',emoji:'🧠',roleName:'Algorithm',desc:'I evaluate candidate models across 7 dimensions (performance, cost, speed, context window, security, ecosystem, customization) and select the best technical route.',label:'My 7-Dimension Model Selection',items:['Performance — accuracy, reasoning, creativity, instruction following','Cost — API calls, compute hosting, development costs','Speed — Time to First Token (TTFT), total generation time','Context Window — 4K / 8K / 128K, long-text processing capability','Security & Privacy — data strategy, deployment, controllability','Ecosystem & Tools — Function Calling, multimodal, community','Customization — fine-tuning support, prompt engineering sensitivity'],delivLabel:'Deliverable',deliverables:[{key:'modelCompare',text:'Model Comparison Matrix'}]},
+      {role:'algo',emoji:'🧠',roleName:'Algorithm',desc:'I handle data collection — gathering knowledge base data from multiple sources, conducting compliance reviews, and using synthetic data or crowdsourcing for cold starts.',label:'Data Collection Work',items:['Multi-source data collection (internal docs / public data / licensed data)','Data compliance review (privacy / copyright)','Cold-start strategy (synthetic data / crowdsource labeling)'],delivLabel:'Deliverable',deliverables:[{key:'knowledgeBase',text:'Knowledge Base Architecture'}]},
+      {role:'multi',emoji:'🏷️',roleName:'Algorithm + Labeling Team',desc:'I design the data labeling scheme, select or develop labeling tools, build and train the labeling team, ensuring inter-annotator agreement κ > 0.8.',label:'Data Labeling Work',items:['Labeling scheme design: define standards and specifications','Labeling tool selection / development','Labeling team building / training','Consistency validation (Kappa coefficient κ > 0.8)']},
+      {role:'algo',emoji:'🧠',roleName:'Algorithm',desc:'I design Prompts and Agent logic, quickly build a minimum viable Demo with core functionality and demo interface.',label:'Rapid Prototyping',items:['Data preparation: run through pipeline with small/synthetic samples','Model selection: start with lightweight / open-source models for fast iteration','Prompt design & Agent logic design','Minimum feature implementation + demo interface development']},
+      {role:'pm',emoji:'📋',roleName:'AI PM',desc:'I personally test the Demo with benchmark cases, checking if AI output meets expectations and documenting every issue.',label:'My POC Testing Points',items:['Functional test: can AI complete the basic task?','Performance test: how\'s the response speed and stability?','Human evaluation: invite experts and real users to score','Data compliance review: is the output content safe and compliant?']}
+    ]},
+    {title:'Evaluation System',subtitle:'How do I know if the model is good? Build quantifiable evaluation standards',gate:'Test cases cover simple/complex/edge scenarios · Automated evaluation pipeline ready · Human evaluation plan confirmed',gateTitle:'Quality Gate · Must confirm before next phase',steps:[
+      {role:'algo',emoji:'🧠',roleName:'Algorithm',desc:'I design offline evaluation metrics (accuracy, precision, recall, F1/AUC) and build an automated evaluation pipeline.',label:'Evaluation Dimensions',items:['Offline metrics — accuracy, precision, recall, F1, AUC','Robustness testing — edge cases, adversarial samples','Interpretability analysis — why did the model give this answer?','Cost analysis — are inference and storage costs acceptable?'],delivLabel:'Deliverable',deliverables:[{key:'evalMatrix',text:'Evaluation Test Cases'}]},
+      {role:'multi',emoji:'📋',roleName:'AI PM + Operations',desc:'Together with Operations, I design "intent tests" and "result tests" to ensure AI understands what users really want.',label:'Test Types',items:['Recall test — can AI understand various user expressions?','Intent test — does AI accurately identify user intent?','Data query test — are knowledge base query results correct?','Result test — does the final output meet business requirements?']}
+    ]},
+    {title:'Dev Collaboration & Launch',subtitle:'Front-back integration, model integration, functional testing — preparing to launch',gate:'Front-back integration passed · All P0 bugs fixed · Multi-dimensional acceptance passed · Ops plan ready',gateTitle:'Quality Gate · Must confirm before next phase',steps:[
+      {role:'pm',emoji:'📋',roleName:'AI PM',desc:'I initiate requirement review, aligning everyone\'s understanding of product scope, and design interaction interfaces and exception handling flows.',label:'What I do',items:['Organize requirement review meeting, align product/algo/dev/ops','Output Product Requirements Document (PRD)','Design interaction & interface scheme']},
+      {role:'algo',emoji:'🧠',roleName:'Algorithm',desc:'I complete model training and tuning, then handle model integration — service deployment, front-back connection, performance tuning, and fallback logic.',label:'Model Training',items:['Hyperparameter tuning (grid search / random search / Bayesian)','Training strategy (transfer learning / fine-tuning / training from scratch)','Multi-round iterative optimization + training log recording'],label2:'Model Integration',items2:['Model service deployment','Front-back connection (define API interfaces and data formats)','Performance tuning (response time / concurrency)','Error handling / fallback logic (graceful degradation when AI is uncertain)'],delivLabel:'Deliverable',deliverables:[{key:'modelIntegration',text:'Evaluation Dataset & Prompt Version'}]},
+      {role:'dev',emoji:'⚙️',roleName:'Engineering',desc:'I handle backend API (RESTful/gRPC), service architecture, frontend UI/UX implementation, plus security and monitoring systems.',label:'Backend',items:['API design / development (RESTful / gRPC)','Service architecture setup (microservices / monolith)','Security mechanisms (authentication / authorization / encryption)','Monitoring / logging system'],label2:'Frontend',items2:['UI/UX design implementation','Interaction flow development','Exception handling (network errors, timeouts, degradation)','Performance optimization (loading / response speed)']},
+      {role:'dev',emoji:'🧪',roleName:'Engineering + AI PM',desc:'We conduct comprehensive functional testing — unit tests, integration tests, end-to-end tests, boundary/edge case tests, tracking all issues in a bug list.',label:'Test Types',items:['Unit tests: does each module work correctly?','Integration tests: do modules work together properly?','End-to-end tests: does the complete user flow work?','Boundary / edge case tests: will extreme inputs crash the system?'],delivLabel:'Deliverable',deliverables:[{key:'bugList',text:'Bug List (P0/P1/P2)'}]},
+      {role:'multi',emoji:'📋',roleName:'AI PM + Operations',desc:'We perform multi-dimensional acceptance — combining subjective metrics (human scoring) and objective metrics (automated evaluation).',label:'Acceptance Criteria',items:['Subjective: expert and user scores ≥ preset threshold','Objective: automated evaluation results meet standards','All P0 bugs fixed, P1 bugs have clear fix plans']}
+    ]},
+    {title:'Iteration & Optimization',subtitle:'A/B testing and canary release — move fast, validate results',gate:'A/B test results significantly better than control · No major issues during canary · All parties confirm full release',gateTitle:'Quality Gate · Must confirm before next phase',steps:[
+      {role:'pm',emoji:'📋',roleName:'AI PM',desc:'I design the A/B testing plan — defining test objectives, core metrics (accuracy/conversion), auxiliary metrics (user satisfaction), and setting up control vs. experiment groups.',label:'A/B Test Design Points',items:['Test objective: what hypothesis are we validating?','Core metrics (accuracy / conversion): must significantly outperform control','Auxiliary metrics (user satisfaction): must not significantly decline','Control vs. experiment group setup: ensure sample comparability']},
+      {role:'dev',emoji:'⚙️',roleName:'Engineering',desc:'I build canary release infrastructure — phased traffic (2%→5%→20%→100%), monitoring thresholds, rollback mechanism, and emergency response plans.',label:'Canary Release Plan',items:['Phased traffic: 2% → 5% → 20% → 100%','Monitoring thresholds: define pass/rollback metric thresholds per phase','Rollback mechanism: switch back to old version within 30 seconds','Emergency response plans for various failure scenarios']},
+      {role:'ops',emoji:'📢',roleName:'Operations',desc:'I monitor user feedback and business metrics during the canary period — raising the alarm immediately if anything looks off.',label:'What I do',items:['Review user feedback daily, record positive and negative reactions','Monitor conversion rate, satisfaction, and other core business metrics','Compile issue list during canary period, push for timely fixes']}
+    ]},
+    {title:'Ongoing Operations',subtitle:'After full release, how do I ensure it keeps working well?',gate:null,gateTitle:null,steps:[
+      {role:'dev',emoji:'⚙️',roleName:'Engineering',desc:'I handle full release and end-to-end monitoring — functionality monitoring (error rate/response time), AI monitoring (accuracy/drift/anomalies), user behavior monitoring, and resource monitoring (CPU/memory/bandwidth).',label:'Full Release Checklist',items:['Traffic switch: canary → full','System monitoring on: CPU, memory, latency, error rate','Real-time log collection: record every AI call\'s input/output','Service SLA confirmation: availability and response time meet targets'],label2:'End-to-End Monitoring (4 Dimensions)',items2:['Functionality — error rate, response time','AI — accuracy, data drift, anomaly detection','User behavior — usage frequency, satisfaction, retention','Resources — CPU / memory / bandwidth utilization']},
+      {role:'algo',emoji:'🧠',roleName:'Algorithm',desc:'I handle data feedback loops and model iteration — building ETL/ELT pipelines, collecting user interaction data, labeling high-quality feedback, establishing data quality monitoring.',label:'Data Feedback Loop',items:['Build ETL/ELT pipelines: automated collection of production data','Collect user interaction data: clicks, feedback, conversation logs','Label high-quality feedback: manually curate good and bad cases','Establish data quality monitoring: ensure pipeline stability'],label2:'Model Iteration',items2:['Data drift detection: has production data distribution shifted from training data?','Incremental training: continuously optimize models with new data','Model updates: deploy new model versions','A/B test validation: compare old vs. new models, confirm improvement']},
+      {role:'ops',emoji:'📢',roleName:'Operations',desc:'I manage end-to-end process optimization post-launch, collecting user feedback and driving commercial value realization.',label:'Operations Focus',items:['Continuously collect user feedback, organize bad cases','Collaborate with PM and algorithm teams to drive iteration','Explore commercialization paths and ecosystem expansion']},
+      {role:'pm',emoji:'📋',roleName:'AI PM',desc:'I orchestrate feature optimization cadence — analyzing user feedback, planning feature iterations, optimizing UI/UX, driving performance tuning. All requirements ranked P0/P1/P2.',label:'Feature Optimization',items:['User feedback analysis: find improvement points from data and feedback','Feature iteration: plan next version by priority','UI/UX optimization: continuously improve user experience','Performance tuning: ensure system stability and efficiency'],delivLabel:'Deliverable',deliverables:[{key:'featureBacklog',text:'Feature Priority Backlog'}]}
+    ],footer:'The entire process cycles continuously — each round makes the product better.'}
+  ],
+  modals:{
+    currentFlow:{tag:'Document',title:'Current Process Flow',body:'<div style="background:var(--bg);border-radius:12px;padding:24px"><div class="flow-row"><span class="flow-step">Receive request</span><span class="flow-arrow">→</span><span class="flow-step">Research product</span><span class="flow-arrow">→</span><span class="flow-step">Find selling points</span><span class="flow-arrow">→</span><span class="flow-step">Write copy</span><span class="flow-arrow">→</span><span class="flow-step">Compliance check</span><span class="flow-arrow">→</span><span class="flow-step">Submit review</span></div><table><tr><th>Step</th><th>Time</th><th>Pain Point</th></tr><tr><td>Research product</td><td>15 min</td><td>Info scattered across docs</td></tr><tr><td>Find selling points</td><td>10 min</td><td>No unified methodology</td></tr><tr><td style="color:var(--ops-color);font-weight:700">Write copy</td><td style="color:var(--ops-color);font-weight:700">25 min</td><td style="color:var(--ops-color);font-weight:700">Most time-consuming, high creative drain</td></tr><tr><td>Compliance check</td><td>5 min</td><td>Easy to miss prohibited words</td></tr></table><p style="font-weight:700;margin-top:12px">Per item: ~55 min / case</p></div>'},
+    reqPool:{tag:'Document',title:'Requirement Pool',body:'<div style="background:var(--bg);border-radius:12px;padding:24px;overflow-x:auto"><table><tr><th>#</th><th>Requirement</th><th>Requester</th><th>Stage</th></tr><tr><td>1</td><td>Production data tracing</td><td>Internal</td><td>Manufacturing</td></tr><tr><td>2</td><td>Equipment assembly tracing</td><td>Internal</td><td>Manufacturing</td></tr><tr><td>3</td><td>Chat history data tracing</td><td>Internal</td><td>Manufacturing</td></tr><tr><td>4</td><td>Root cause tracing</td><td>Internal</td><td>Quality Control</td></tr></table></div>'},
+    ioSpec:{tag:'Document',title:'I/O Specification',body:'<div style="background:var(--bg);border-radius:12px;padding:24px"><table><tr><th>Item</th><th>Description</th></tr><tr><td style="font-weight:700">Input</td><td>Product name, attributes, target audience, platform</td></tr><tr><td style="font-weight:700">Output</td><td>Marketing copy, 200-500 words, 3+ selling points</td></tr><tr><td style="font-weight:700">Constraints</td><td>No prohibited words, no false claims</td></tr><tr><td style="font-weight:700">Quality</td><td>Human rating ≥ 4.0/5.0</td></tr></table></div>'},
+    mvpScope:{tag:'Document',title:'MVP Scope Definition',body:'<div style="background:var(--bg);border-radius:12px;padding:24px"><ul style="list-style:none;padding:0"><li style="padding:6px 0">✅ <strong>Define core features</strong> (high-frequency + single scenario)</li><li style="padding:6px 0">✅ <strong>Identify alternatives for non-core features</strong></li><li style="padding:6px 0">✅ <strong>Define "minimum viable" standard</strong></li></ul></div>'},
+    benchmark:{tag:'Document',title:'Benchmark Case Set',body:'<div style="background:var(--bg);border-radius:12px;padding:24px"><table><tr><th>Case</th><th>Type</th><th>Input Summary</th></tr><tr><td>#001</td><td>Simple</td><td>Single product, beauty</td></tr><tr><td>#003</td><td>Complex</td><td>Multi-product comparison, 3C</td></tr><tr><td>#004</td><td>Edge</td><td>Healthcare (compliance sensitive)</td></tr><tr><td colspan="3" style="text-align:center;color:var(--text-secondary)">Total ≥ 10 cases</td></tr></table></div>'},
+    modelCompare:{tag:'Document',title:'Model Comparison Matrix',body:'<div style="background:var(--bg);border-radius:12px;padding:24px;overflow-x:auto"><table><tr><th>Dimension</th><th>Core Question</th><th>Evaluation Points</th></tr><tr><td>Performance</td><td>Task completion?</td><td>Accuracy, reasoning, creativity</td></tr><tr><td>Cost</td><td>Total cost?</td><td>API, hosting, development</td></tr><tr><td>Speed</td><td>Response speed?</td><td>TTFT, total generation time</td></tr><tr><td>Context</td><td>How much info?</td><td>4K/8K/128K</td></tr><tr><td>Security</td><td>Data safe?</td><td>Strategy, deployment, control</td></tr><tr><td>Ecosystem</td><td>Easy integration?</td><td>FC, multimodal, community</td></tr><tr><td>Customization</td><td>Fit business?</td><td>Fine-tuning, prompt engineering</td></tr></table></div>'},
+    knowledgeBase:{tag:'Document',title:'Knowledge Base Architecture',body:'<div style="background:var(--bg);border-radius:12px;padding:24px;overflow-x:auto"><table><tr><th>Type</th><th>Knowledge Base</th><th>Knowledge Types</th></tr><tr><td>Foundation</td><td>Industry General</td><td>Standards, industry jargon</td></tr><tr><td>Professional</td><td>Factory-Specific</td><td>SOP, equipment, quality, problem-solving</td></tr><tr><td>Cases</td><td>Historical Cases</td><td>Issue reports, diagnostic cases</td></tr><tr><td>Relational</td><td>Schema</td><td>DB documentation, quality SQL</td></tr></table></div>'},
+    evalMatrix:{tag:'Document',title:'Evaluation Test Cases',body:'<div style="background:var(--bg);border-radius:12px;padding:24px;overflow-x:auto"><table><tr><th>#</th><th>Question</th><th>Type</th></tr><tr><td>1</td><td>What causes tread surface scratches?</td><td>Simple</td></tr><tr><td>9</td><td>Extruder temp is high, tread has hot rubber particles — related?</td><td>Compound</td></tr><tr><td>12</td><td>Inspector says more defects recently, find the cause</td><td>Ambiguous intent</td></tr></table></div>'},
+    modelIntegration:{tag:'Document',title:'Evaluation Dataset & Prompt Version',body:'<div style="background:var(--bg);border-radius:12px;padding:24px"><p style="font-weight:700;margin-bottom:8px">System Prompt (V20)</p><p style="font-size:13px;color:var(--text-secondary);font-style:italic">"You are a root cause analysis expert in tire manufacturing with years of experience..."</p></div>'},
+    bugList:{tag:'Document',title:'Bug List',body:'<div style="background:var(--bg);border-radius:12px;padding:24px"><p style="font-weight:700;color:var(--ops-color);margin-bottom:8px">P0 · 11 items</p><table><tr><th>#</th><th>Bug</th></tr><tr><td>1</td><td>Report format optimization</td></tr><tr><td>2</td><td>Extra info in responses</td></tr><tr><td>3</td><td>Q&A errors</td></tr><tr><td>6</td><td>Multi-Agent flow breaks</td></tr><tr><td>7</td><td>Intent recognition issues</td></tr></table></div>'},
+    featureBacklog:{tag:'Document',title:'Feature Priority Backlog',body:'<div style="background:var(--bg);border-radius:12px;padding:24px"><p style="font-weight:700;color:var(--ops-color);margin-bottom:8px">P0 · 5 items</p><table><tr><th>#</th><th>Feature</th><th>Status</th></tr><tr><td>1</td><td>PC share function</td><td style="color:var(--algo-color)">Accepted</td></tr><tr><td>2</td><td>Template page optimization</td><td style="color:var(--algo-color)">Accepted</td></tr><tr><td>3</td><td>Windows compatibility fix</td><td style="color:#d97706">In review</td></tr></table></div>'}
+  }
+}
+};
+
+// ═══ RENDER ALL CONTENT ═══
+function renderContent() {
+  const L = i18n[currentLang];
+  // Hero
+  document.querySelector('[data-i18n="hero_title"]').innerHTML = L.hero_title;
+  document.querySelector('[data-i18n="hero_desc"]').textContent = L.hero_desc;
+  document.querySelector('[data-i18n="role_pm"]').textContent = L.role_pm;
+  document.querySelector('[data-i18n="role_ops"]').textContent = L.role_ops;
+  document.querySelector('[data-i18n="role_algo"]').textContent = L.role_algo;
+  document.querySelector('[data-i18n="role_dev"]').textContent = L.role_dev;
+  // Nav
+  for(let i=1;i<=6;i++) document.querySelector(`[data-i18n="nav${i}"]`).textContent = L['nav'+i];
+  // Close role panel if open
+  if(activeRole){const p=document.getElementById('roleDetailPanel');p.style.maxHeight='0';p.classList.remove('open');document.querySelectorAll('.role-chip').forEach(c=>c.classList.remove('active'));activeRole=null;}
+  // Main content
+  let html='';
+  L.phases.forEach((ph,idx)=>{
+    const num=String(idx+1).padStart(2,'0');
+    html+=`<section class="phase-section fade-in" id="phase${idx+1}">
+      <div class="phase-header"><div class="phase-number">${num}</div><div><div class="phase-title">${ph.title}</div><div class="phase-subtitle">${ph.subtitle}</div></div></div>`;
+    ph.steps.forEach(s=>{
+      const roleClass = s.role==='multi'?'multi':s.role;
+      html+=`<div class="step-card"><div class="step-card-header" onclick="toggleCard(this)">
+        <div class="step-role-dot ${roleClass}">${s.emoji}</div>
+        <div style="flex:1"><div class="step-role-name ${roleClass}">${s.roleName}</div><div class="step-desc">${s.desc}</div></div>
+        <div class="step-toggle">▼</div></div>
+        <div class="step-detail"><div class="step-detail-inner">
+          <div class="detail-section"><div class="detail-label">${s.label}</div><ul class="detail-list">${s.items.map(i=>`<li class="${s.role==='multi'?'pm':s.role}">${i}</li>`).join('')}</ul></div>`;
+      if(s.label2&&s.items2){
+        html+=`<div class="detail-section"><div class="detail-label">${s.label2}</div><ul class="detail-list">${s.items2.map(i=>`<li class="${s.role==='multi'?'pm':s.role}">${i}</li>`).join('')}</ul></div>`;
+      }
+      if(s.deliverables){
+        html+=`<div class="detail-section"><div class="detail-label">${s.delivLabel}</div>${s.deliverables.map(d=>`<div class="deliverable" onclick="showModal('${d.key}')"><span class="icon">📄</span> ${d.text}</div>`).join('')}</div>`;
+      }
+      html+=`</div></div></div>`;
+    });
+    if(ph.gate){
+      html+=`<div class="quality-gate fade-in"><div class="gate-icon">✓</div><div><div class="gate-title">${ph.gateTitle}</div><div class="gate-items">${ph.gate}</div></div></div>`;
+    }
+    if(idx<5) html+=`<div class="connector"><div class="connector-line"></div></div>`;
+    if(ph.footer) html+=`<div style="text-align:center;padding:48px 0 0;color:var(--text-secondary);font-size:14px"><div style="font-size:32px;margin-bottom:12px">🔄</div>${ph.footer}</div>`;
+    html+=`</section>`;
+  });
+  document.getElementById('mainContent').innerHTML = html;
+  // Re-observe fade-ins
+  document.querySelectorAll('.fade-in').forEach(el=>fadeObs.observe(el));
+  document.querySelectorAll('.phase-section').forEach(s=>navObs.observe(s));
+}
+
+function switchLang(lang) {
+  currentLang = lang;
+  document.getElementById('btnZh').classList.toggle('active', lang==='zh');
+  document.getElementById('btnEn').classList.toggle('active', lang==='en');
+  document.documentElement.lang = lang==='zh'?'zh-CN':'en';
+  document.title = lang==='zh'?'AI 产品研发协作全流程':'AI Product Development Workflow';
+  renderContent();
+}
+
+// ═══ CORE FUNCTIONS ═══
+function toggleCard(h){const c=h.closest('.step-card'),d=c.querySelector('.step-detail');if(c.classList.contains('open')){d.style.maxHeight='0';c.classList.remove('open')}else{d.style.maxHeight=d.scrollHeight+'px';c.classList.add('open')}}
+
+let activeRole=null;
+function toggleRole(role){
+  const panel=document.getElementById('roleDetailPanel'),card=document.getElementById('roleDetailCard'),chips=document.querySelectorAll('.role-chip');
+  if(activeRole===role){panel.style.maxHeight='0';panel.classList.remove('open');chips.forEach(c=>c.classList.remove('active'));activeRole=null;return}
+  chips.forEach(c=>c.classList.remove('active'));
+  document.querySelector(`.role-chip[data-role="${role}"]`).classList.add('active');
+  const L=i18n[currentLang],d=L.roleData[role];
+  card.innerHTML=`<div class="rd-header"><div class="rd-avatar ${role}">${d.emoji||{'pm':'📋','ops':'📢','algo':'🧠','dev':'⚙️'}[role]}</div><div><div class="rd-name ${role}">${d.name}</div><div class="rd-tagline">${d.tagline}</div></div></div><ul class="rd-duties ${role}">${d.duties.map(x=>`<li>${x}</li>`).join('')}</ul><div class="rd-phases"><span style="font-size:11px;color:rgba(255,255,255,.35);margin-right:4px;line-height:28px">${L.phases_label}</span>${d.phases.map(p=>`<span class="rd-phase-tag">${p}</span>`).join('')}</div>`;
+  if(!activeRole){panel.classList.add('open')}
+  panel.style.maxHeight=card.scrollHeight+80+'px';
+  activeRole=role;
+}
+
+function showModal(k){const L=i18n[currentLang],d=L.modals[k];if(!d)return;document.getElementById('modalTag').textContent=d.tag;document.getElementById('modalTitle').textContent=d.title;document.getElementById('modalBody').innerHTML=d.body;const o=document.getElementById('modalOverlay');o.style.display='flex';requestAnimationFrame(()=>o.classList.add('show'))}
+function closeModal(e){if(e.target===e.currentTarget)closeModalDirect()}
+function closeModalDirect(){const o=document.getElementById('modalOverlay');o.classList.remove('show');setTimeout(()=>o.style.display='none',300)}
+
+document.querySelectorAll('.nav-item').forEach(i=>i.addEventListener('click',()=>{const e=document.getElementById(i.dataset.phase);if(e)e.scrollIntoView({behavior:'smooth',block:'start'})}));
+
+const navObs=new IntersectionObserver(e=>e.forEach(en=>{if(en.isIntersecting){document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));const a=document.querySelector(`.nav-item[data-phase="${en.target.id}"]`);if(a)a.classList.add('active')}}),{threshold:.2,rootMargin:'-80px 0px -50% 0px'});
+const fadeObs=new IntersectionObserver(e=>e.forEach(en=>{if(en.isIntersecting)en.target.classList.add('visible')}),{threshold:.1});
+
+window.addEventListener('scroll',()=>{
+  document.getElementById('scrollProgress').style.width=(window.scrollY/(document.documentElement.scrollHeight-window.innerHeight)*100)+'%';
+  document.getElementById('langToggle').classList.toggle('scrolled',window.scrollY>window.innerHeight*0.8);
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModalDirect()});
+
+// Initial render
+renderContent();
+</script>
+</body>
+</html>
